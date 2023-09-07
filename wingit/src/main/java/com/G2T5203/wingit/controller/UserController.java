@@ -1,13 +1,13 @@
-package com.G2T5203.wingit.user;
+package com.G2T5203.wingit.controller;
 
-import com.G2T5203.wingit.entities.WingitUser;
+import com.G2T5203.wingit.model.WingitUser;
+import com.G2T5203.wingit.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.logging.Level;
 
 @RestController
 public class UserController {

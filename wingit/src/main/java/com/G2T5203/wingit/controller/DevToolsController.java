@@ -1,4 +1,4 @@
-package com.G2T5203.wingit.devtools;
+package com.G2T5203.wingit.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
