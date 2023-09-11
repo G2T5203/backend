@@ -17,12 +17,16 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(new AntPathRequestMatcher("/")).permitAll();
-                    auth.anyRequest().authenticated();
-                })
-                .oauth2Login(withDefaults())
-                .formLogin(withDefaults())
+                .csrf(csrf -> csrf.disable()) // Cross-site request forgery
+//                .authorizeHttpRequests(auth -> {
+//                    auth.requestMatchers(new AntPathRequestMatcher("/")).permitAll();
+//                    auth.anyRequest().authenticated();
+//                })
+//                .oauth2Login(withDefaults())
+//                .formLogin(withDefaults())
+//                .build();
+
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .build();
     }
 
