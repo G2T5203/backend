@@ -1,55 +1,39 @@
 package com.G2T5203.wingit.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 
-import java.util.Date;
+import java.util.List;
 
 @Entity
-@IdClass(RouteListingID.class)
 public class RouteListing {
-    @Id
-    private String planeID;
-    @Id
-    private String routeID;
-    @Id
-    private Date departureDatetime;
+    @EmbeddedId
+    private RouteListingPk routeListingPk; // Embedded composite key
+
     private double basePrice;
 
-    public RouteListing(String planeID, String routeID, Date departureDatetime, double basePrice) {
-        this.planeID = planeID;
-        this.routeID = routeID;
-        this.departureDatetime = departureDatetime;
+    @OneToMany(mappedBy = "outboundRouteListing", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Booking> outboundBooking;
+
+    @OneToMany(mappedBy = "inboundRouteListing", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Booking> inboundBooking;
+
+    public RouteListing(RouteListingPk routeListingPk, double basePrice) {
+        this.routeListingPk = routeListingPk;
         this.basePrice = basePrice;
     }
 
     public RouteListing() {
-
     }
 
-    public String getPlaneID() {
-        return planeID;
+    public RouteListingPk getRouteListingPk() {
+        return routeListingPk;
     }
 
-    public void setPlaneID(String planeID) {
-        this.planeID = planeID;
-    }
-
-    public String getRouteID() {
-        return routeID;
-    }
-
-    public void setRouteID(String routeID) {
-        this.routeID = routeID;
-    }
-
-    public Date getDepartureDatetime() {
-        return departureDatetime;
-    }
-
-    public void setDepartureDatetime(Date departureDatetime) {
-        this.departureDatetime = departureDatetime;
+    public void setRouteListingPk(RouteListingPk routeListingPk) {
+        this.routeListingPk = routeListingPk;
     }
 
     public double getBasePrice() {
@@ -60,12 +44,26 @@ public class RouteListing {
         this.basePrice = basePrice;
     }
 
+    public List<Booking> getOutboundBooking() {
+        return outboundBooking;
+    }
+
+    public void setOutboundBooking(List<Booking> outboundBooking) {
+        this.outboundBooking = outboundBooking;
+    }
+
+    public List<Booking> getInboundBooking() {
+        return inboundBooking;
+    }
+
+    public void setInboundBooking(List<Booking> inboundBooking) {
+        this.inboundBooking = inboundBooking;
+    }
+
     @Override
     public String toString() {
         return "RouteListing{" +
-                "planeID='" + planeID + '\'' +
-                ", routeID='" + routeID + '\'' +
-                ", departureDatetime=" + departureDatetime +
+                "routeListingPk=" + routeListingPk +
                 ", basePrice=" + basePrice +
                 '}';
     }

@@ -1,33 +1,30 @@
 package com.G2T5203.wingit.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Plane {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String planeID;
+    private String planeId;
     private int capacity;
     private String model;
 
-    public Plane(String planeID, int capacity, String model) {
-        this.planeID = planeID;
+    public Plane(String planeId, int capacity, String model) {
+        this.planeId = planeId;
         this.capacity = capacity;
         this.model = model;
     }
 
     public Plane() {
+
     }
 
-    public String getPlaneID() {
-        return planeID;
+    public String getPlaneId() {
+        return planeId;
     }
 
-    public void setPlaneID(String planeID) {
-        this.planeID = planeID;
+    public void setPlaneId(String planeId) {
+        this.planeId = planeId;
     }
 
     public int getCapacity() {
@@ -49,7 +46,7 @@ public class Plane {
     @Override
     public String toString() {
         return "Plane{" +
-                "planeID='" + planeID + '\'' +
+                "planeId='" + planeId + '\'' +
                 ", capacity=" + capacity +
                 ", model='" + model + '\'' +
                 '}';

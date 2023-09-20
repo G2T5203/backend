@@ -3,40 +3,27 @@ package com.G2T5203.wingit.entities;
 import jakarta.persistence.*;
 
 @Entity
-@IdClass(SeatId.class)
 public class Seat {
-    @Id
-    private String planeID;
-    @Id
-    private int seatNumber;
+    @EmbeddedId
+    private SeatPk seatPk;
     private String seatClass;
     private double priceFactor;
 
-    public Seat(String planeID, int seatNumber, String seatClass, double priceFactor) {
-        this.planeID = planeID;
-        this.seatNumber = seatNumber;
+    public Seat(SeatPk seatPk, String seatClass, double priceFactor) {
+        this.seatPk = seatPk;
         this.seatClass = seatClass;
         this.priceFactor = priceFactor;
     }
 
     public Seat() {
-
     }
 
-    public String getPlaneID() {
-        return planeID;
+    public SeatPk getSeatPk() {
+        return seatPk;
     }
 
-    public void setPlaneID(String planeID) {
-        this.planeID = planeID;
-    }
-
-    public int getSeatNumber() {
-        return seatNumber;
-    }
-
-    public void setSeatNumber(int seatNumber) {
-        this.seatNumber = seatNumber;
+    public void setSeatPk(SeatPk seatPk) {
+        this.seatPk = seatPk;
     }
 
     public String getSeatClass() {
@@ -58,8 +45,7 @@ public class Seat {
     @Override
     public String toString() {
         return "Seat{" +
-                "planeID='" + planeID + '\'' +
-                ", seatNumber=" + seatNumber +
+                "seatPk=" + seatPk +
                 ", seatClass='" + seatClass + '\'' +
                 ", priceFactor=" + priceFactor +
                 '}';

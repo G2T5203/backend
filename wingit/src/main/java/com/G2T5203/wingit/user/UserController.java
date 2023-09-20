@@ -1,23 +1,23 @@
 package com.G2T5203.wingit.user;
 
 import com.G2T5203.wingit.entities.WingitUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.logging.Level;
+
+import java.util.*;
 
 @RestController
 public class UserController {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final UserService service;
-
-    public UserController(UserService service) {
-        this.service = service;
-    }
+    public UserController(UserService service) { this.service = service; }
 
     // GET all users
     @GetMapping(path = "/users")
@@ -25,36 +25,83 @@ public class UserController {
         return service.getAllUsers();
     }
 
-    // GET a specific user by userID
-    @GetMapping(path = "/users/{userID}")
-    public WingitUser getUser(@PathVariable Integer userID) {
-        return service.getById(userID);
+
+    private boolean isUserOrAdmin(String username, UserDetails userDetails) {
+        boolean isUser = username.equals(userDetails.getUsername());
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
+
+        return (isUser || isAdmin);
+    }
+
+    // GET a specific user by username
+    @GetMapping(path = "/users/{username}")
+    public WingitUser getUser(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
+        if (!isUserOrAdmin(username, userDetails)) throw new UserBadRequestException("Not the same user.");
+
+        WingitUser user = service.getById(username);
+        if (user == null) throw new UserNotFoundException(username);
+        return user;
+    }
+
+    @GetMapping(path = "/users/authTest/{var}")
+    public ResponseEntity<Object> getAuthTest(@PathVariable String var) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("pathInput", var);
+        return new ResponseEntity<>(body, null, HttpStatus.OK);
     }
 
     // POST to add a new user
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/users/new")
-    public ResponseEntity<String> createUser(@RequestBody WingitUser newUser) {
-        logger.debug("RequestBody JSON: " + newUser.toString());
-        HttpStatus resultingStatus = service.createUser(newUser);
-        return ResponseEntity.status(resultingStatus).build();
+    public WingitUser createUser(@Valid @RequestBody WingitUser newUser) {
+        try {
+            return service.createUser(newUser);
+        } catch (Exception e) {
+            throw new UserBadRequestException(e);
+        }
     }
 
-    // DELETE a specific user by userID
-    @DeleteMapping(path = "/users/delete/{userID}")
-    public ResponseEntity<String> deleteUser(@PathVariable Integer userID) {
-        HttpStatus resultingStatus = service.deleteUserById(userID);
-        return ResponseEntity.status(resultingStatus).build();
+    // DELETE a specific user by username
+    @DeleteMapping(path = "/users/delete/{username}")
+    public void deleteUser(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails) {
+        if (!isUserOrAdmin(username, userDetails)) throw new UserBadRequestException("Not the same user.");
+
+        try {
+            service.deleteUserById(username);
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserBadRequestException(e);
+        }
     }
 
-    // PUT to update a specific user by userID
-    @PutMapping("/users/update/{userID}")
-    public ResponseEntity<String> updateUser(@PathVariable Integer userID, @RequestBody WingitUser updatedUser) {
-        updatedUser.setUserId(userID);
-        HttpStatus resultingStatus;
-        resultingStatus = service.updateUser(updatedUser);
+    // PUT to update a specific user by username
+    @PutMapping("/users/update/{username}")
+    public WingitUser updateUser(@PathVariable String username, @Valid @RequestBody WingitUser updatedUser, @AuthenticationPrincipal UserDetails userDetails) {
+        if (!isUserOrAdmin(username, userDetails)) throw new UserBadRequestException("Not the same user.");
 
-        return ResponseEntity.status(resultingStatus).build();
+        boolean usernamesMatch = username.equals(updatedUser.getUsername());
+        if (!usernamesMatch) throw new UserBadRequestException("Path username and payload username mismtach.");
+
+        try {
+            return service.updateUser(updatedUser);
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserBadRequestException(e);
+        }
     }
 
+    @PutMapping("/users/updatePass/{username}")
+    public WingitUser updatePassword(@PathVariable String username, @RequestBody Map<String, Object> newPassword, @AuthenticationPrincipal UserDetails userDetails) {
+        if (!isUserOrAdmin(username, userDetails)) throw new UserBadRequestException("Not the same user.");
 
+        JSONObject jsonObj = new JSONObject(newPassword);
+        try {
+            String jsonPassword = jsonObj.getString("password");
+            return service.updatePassword(username, jsonPassword);
+        } catch (Exception e) {
+            throw new UserBadRequestException(e);
+        }
+    }
 }
