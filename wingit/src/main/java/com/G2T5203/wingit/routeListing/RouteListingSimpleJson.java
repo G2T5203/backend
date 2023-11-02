@@ -1,32 +1,34 @@
 package com.G2T5203.wingit.routeListing;
 
-import com.G2T5203.wingit.entities.RouteListing;
-
 import java.time.Duration;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class RouteListingSimpleJson {
     private Integer routeId;
     private String planeId;
-    private Date departureDatetime;
+    private LocalDateTime departureDatetime;
     private Duration flightDuration;
     private double basePrice;
+    private int availableSeats;
 
-    public RouteListingSimpleJson(Integer routeId, String planeId, Date departureDatetime, Duration flightDuration, double basePrice) {
+    public RouteListingSimpleJson(Integer routeId, String planeId, LocalDateTime departureDatetime, Duration flightDuration, double basePrice, int availableSeats) {
         this.routeId = routeId;
         this.planeId = planeId;
         this.departureDatetime = departureDatetime;
         this.flightDuration = flightDuration;
         this.basePrice = basePrice;
+        this.availableSeats = availableSeats;
     }
 
-    public RouteListingSimpleJson(RouteListing routeListing) {
+    public RouteListingSimpleJson(RouteListing routeListing, int availableSeats) {
         this(
                 routeListing.getRouteListingPk().getRoute().getRouteId(),
                 routeListing.getRouteListingPk().getPlane().getPlaneId(),
                 routeListing.getRouteListingPk().getDepartureDatetime(),
                 routeListing.getRouteListingPk().getRoute().getFlightDuration(),
-                routeListing.getBasePrice()
+                routeListing.getBasePrice(),
+
+                availableSeats
         );
     }
     public RouteListingSimpleJson() {}
@@ -47,11 +49,11 @@ public class RouteListingSimpleJson {
         this.planeId = planeId;
     }
 
-    public Date getDepartureDatetime() {
+    public LocalDateTime getDepartureDatetime() {
         return departureDatetime;
     }
 
-    public void setDepartureDatetime(Date departureDatetime) {
+    public void setDepartureDatetime(LocalDateTime departureDatetime) {
         this.departureDatetime = departureDatetime;
     }
 
@@ -66,4 +68,8 @@ public class RouteListingSimpleJson {
     public void setBasePrice(double basePrice) {
         this.basePrice = basePrice;
     }
+
+    public int getAvailableSeats() { return availableSeats; }
+
+    public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
 }

@@ -1,34 +1,25 @@
 package com.G2T5203.wingit.routeListing;
 
-import com.G2T5203.wingit.entities.RouteListing;
+import com.G2T5203.wingit.seatListing.SeatListingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class RouteListingController {
     private final RouteListingService service;
+    private final SeatListingService seatListingService;
 
-    public RouteListingController(RouteListingService service) { this.service = service; }
+    public RouteListingController(RouteListingService service, SeatListingService seatListingService) {
+        this.service = service;
+        this.seatListingService = seatListingService;
+    }
 
     @GetMapping(path = "/routeListings")
     public List<RouteListingSimpleJson> getAllRouteListings() { return service.getAllRouteListings(); }
-
-    @GetMapping(path = "/routeListings/depart/{departureDest}")
-    public List<RouteListingSimpleJson> getAllRouteListingsByDepartureDest(@PathVariable String departureDest) {
-        return service.getAllRouteListingsWithDepartureDest(departureDest);
-    }
-
-    @GetMapping(path = "/routeListings/departAndArrive/{departureDest}/{arrivalDest}")
-    public List<RouteListingSimpleJson> getAllRouteListingsByDepartAndArrive(@PathVariable String departureDest, @PathVariable String arrivalDest) {
-        return service.getAllRouteListingsWithDepartureDestAndArrivalDestination(departureDest, arrivalDest);
-    }
 
     @GetMapping(path = "/routeListings/fullSearch/{departureDest}/{arrivalDest}/{year}/{month}/{day}")
     public List<RouteListingSimpleJson> getAllRoutesMatchingFullSearch(
@@ -48,7 +39,9 @@ public class RouteListingController {
     @PostMapping(path = "/routeListings/new")
     public RouteListing createRouteListing(@Valid @RequestBody RouteListingSimpleJson newRouteListingSimpleJson) {
         try {
-            return service.createRouteListing(newRouteListingSimpleJson);
+            RouteListing newRouteListing = service.createRouteListing(newRouteListingSimpleJson);
+            seatListingService.createSeatListingsForNewRouteListing(newRouteListing);
+            return newRouteListing;
         } catch (Exception e) {
             throw new RouteListingBadRequestException(e);
         }

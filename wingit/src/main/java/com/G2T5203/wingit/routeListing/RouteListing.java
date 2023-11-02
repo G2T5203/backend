@@ -1,7 +1,11 @@
-package com.G2T5203.wingit.entities;
+package com.G2T5203.wingit.routeListing;
 
+import com.G2T5203.wingit.booking.Booking;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -10,13 +14,16 @@ public class RouteListing {
     @EmbeddedId
     private RouteListingPk routeListingPk; // Embedded composite key
 
+    @DecimalMin(value = "100.0", message = "The minimum basePrice is $100.00")
     private double basePrice;
 
     @OneToMany(mappedBy = "outboundRouteListing", cascade = CascadeType.ALL)
+//    @JsonManagedReference
     @JsonIgnore
     private List<Booking> outboundBooking;
 
     @OneToMany(mappedBy = "inboundRouteListing", cascade = CascadeType.ALL)
+//    @JsonManagedReference
     @JsonIgnore
     private List<Booking> inboundBooking;
 

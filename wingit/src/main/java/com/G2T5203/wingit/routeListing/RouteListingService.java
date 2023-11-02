@@ -1,19 +1,19 @@
 package com.G2T5203.wingit.routeListing;
 
-import com.G2T5203.wingit.entities.Plane;
-import com.G2T5203.wingit.entities.Route;
-import com.G2T5203.wingit.entities.RouteListing;
-import com.G2T5203.wingit.entities.RouteListingPk;
+import com.G2T5203.wingit.booking.Booking;
+import com.G2T5203.wingit.booking.BookingService;
+import com.G2T5203.wingit.plane.Plane;
 import com.G2T5203.wingit.plane.PlaneNotFoundException;
 import com.G2T5203.wingit.plane.PlaneRepository;
+import com.G2T5203.wingit.route.Route;
 import com.G2T5203.wingit.route.RouteNotFoundException;
 import com.G2T5203.wingit.route.RouteRepository;
+import com.G2T5203.wingit.seatListing.SeatListing;
+import com.G2T5203.wingit.seatListing.SeatListingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,42 +23,47 @@ public class RouteListingService {
     private final RouteListingRepository repo;
     private final RouteRepository routeRepo;
     private final PlaneRepository planeRepo;
+    private final SeatListingRepository seatListingRepo;
+    private final BookingService bookingService;
 
-    public RouteListingService(RouteListingRepository repo, RouteRepository routeRepo, PlaneRepository planeRepo) {
+    public RouteListingService(
+            RouteListingRepository repo,
+            RouteRepository routeRepo,
+            PlaneRepository planeRepo,
+            SeatListingRepository seatListingRepo,
+            BookingService bookingService) {
         this.repo = repo;
         this.routeRepo = routeRepo;
         this.planeRepo = planeRepo;
+        this.seatListingRepo = seatListingRepo;
+        this.bookingService = bookingService;
     }
 
     public List<RouteListingSimpleJson> getAllRouteListings() {
         List<RouteListing> routeListings = repo.findAll();
         return routeListings.stream()
-                .map(RouteListingSimpleJson::new)
-                .collect(Collectors.toList());
-    }
-
-    public List<RouteListingSimpleJson> getAllRouteListingsWithDepartureDest(String departureDest) {
-        List<RouteListing> routeListings = repo.findByRouteListingPkRouteDepartureDest(departureDest);
-        return routeListings.stream()
-                .map(RouteListingSimpleJson::new)
-                .collect(Collectors.toList());
-    }
-
-    public List<RouteListingSimpleJson> getAllRouteListingsWithDepartureDestAndArrivalDestination(String departureDest, String arrivalDest) {
-        List<RouteListing> routeListings = repo.findByRouteListingPkRouteDepartureDestAndRouteListingPkRouteArrivalDest(departureDest, arrivalDest);
-        return routeListings.stream()
-                .map(RouteListingSimpleJson::new)
+                .map(routeListing -> new RouteListingSimpleJson(routeListing, calculateRemainingSeatsForRouteListing(routeListing.getRouteListingPk())))
                 .collect(Collectors.toList());
     }
 
     public List<RouteListingSimpleJson> getAllRouteListingsMatchingFullSearch(String departureDest, String arrivalDest, LocalDate matchingDate) {
         List<RouteListing> routeListings = repo.findByRouteListingPkRouteDepartureDestAndRouteListingPkRouteArrivalDest(departureDest, arrivalDest);
         return routeListings.stream().filter(routeListing -> {
-            LocalDate routeListingDate = routeListing.getRouteListingPk().getDepartureDatetime().toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+            LocalDate routeListingDate = routeListing.getRouteListingPk().getDepartureDatetime().toLocalDate();
             return routeListingDate.equals(matchingDate);
-        }).map(RouteListingSimpleJson::new).collect(Collectors.toList());
+        }).map(routeListing -> new RouteListingSimpleJson(routeListing, calculateRemainingSeatsForRouteListing(routeListing.getRouteListingPk()))).collect(Collectors.toList());
+    }
+
+    public int calculateRemainingSeatsForRouteListing(RouteListingPk routeListingPk) {
+        List<SeatListing> availableSeats = seatListingRepo.findBySeatListingPkRouteListingRouteListingPkAndBookingIsNull(routeListingPk);
+        List<Booking> activeBookingsForRouteListing = bookingService.getActiveUnfinishedBookingsForRouteListing(routeListingPk);
+        int numRemainingSeats = availableSeats.size();
+        for (Booking booking : activeBookingsForRouteListing) {
+            numRemainingSeats -= booking.getPartySize(); // Remove reserved number of seats for active booking
+            numRemainingSeats += booking.getSeatListing().size(); // Add back to tally those they already booked to undo doublecount.
+        }
+
+        return numRemainingSeats;
     }
 
     @Transactional

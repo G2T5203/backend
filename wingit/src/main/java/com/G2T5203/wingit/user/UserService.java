@@ -1,13 +1,10 @@
 package com.G2T5203.wingit.user;
 
-import com.G2T5203.wingit.entities.WingitUser;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
-import java.awt.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,7 +67,7 @@ public class UserService {
     @Transactional
     public WingitUser updatePassword(String username, String newPassword) {
         Optional<WingitUser> retrievedUser = repo.findById(username);
-        if (retrievedUser.isEmpty()) throw new UsernameNotFoundException(username);
+        if (retrievedUser.isEmpty()) throw new UserNotFoundException(username);
 
         String newHashedPassword = encoder.encode(newPassword);
         retrievedUser.get().setPassword(newHashedPassword);

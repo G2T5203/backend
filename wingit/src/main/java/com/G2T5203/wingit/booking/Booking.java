@@ -1,15 +1,20 @@
-package com.G2T5203.wingit.entities;
+package com.G2T5203.wingit.booking;
 
+import com.G2T5203.wingit.routeListing.RouteListing;
+import com.G2T5203.wingit.seatListing.SeatListing;
+import com.G2T5203.wingit.user.WingitUser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 public class Booking {
     @Id
-    private String bookingId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer bookingId;
     @ManyToOne
     @JoinColumn(name = "username")
     private WingitUser wingitUser;
@@ -27,16 +32,32 @@ public class Booking {
             @JoinColumn(name = "inboundDepartureDatetime", referencedColumnName = "departureDatetime")
     })
     private RouteListing inboundRouteListing;
-    private Date startBookingDatetime;
+    // @Past // Removing this as it has been giving a lot of errors!
+    private LocalDateTime startBookingDatetime;
+    @Min(value = 1, message = "Party size cannot be lower than 1")
+    @Max(value = 10, message = "Party size cannot be more than 10")
     private int partySize;
+    // NOTE: Charged price can set to -1.0 to indicate that the final price has yet to be calculated.
+    @DecimalMin(value = "-1.0", message = "Charged price cannot be negative!")
     private double chargedPrice;
     private boolean isPaid;
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+//    @JsonManagedReference
     @JsonIgnore
     private List<SeatListing> seatListing;
 
-    public Booking(String bookingId, WingitUser wingitUser, RouteListing outboundRouteListing, RouteListing inboundRouteListing, Date startBookingDatetime, int partySize, double chargedPrice, boolean isPaid) {
+    public Booking(Integer bookingId, WingitUser wingitUser, RouteListing outboundRouteListing, RouteListing inboundRouteListing, LocalDateTime startBookingDatetime, int partySize, double chargedPrice, boolean isPaid) {
         this.bookingId = bookingId;
+        this.wingitUser = wingitUser;
+        this.outboundRouteListing = outboundRouteListing;
+        this.inboundRouteListing = inboundRouteListing;
+        this.startBookingDatetime = startBookingDatetime;
+        this.partySize = partySize;
+        this.chargedPrice = chargedPrice;
+        this.isPaid = isPaid;
+    }
+
+    public Booking(WingitUser wingitUser, RouteListing outboundRouteListing, RouteListing inboundRouteListing, LocalDateTime startBookingDatetime, int partySize, double chargedPrice, boolean isPaid) {
         this.wingitUser = wingitUser;
         this.outboundRouteListing = outboundRouteListing;
         this.inboundRouteListing = inboundRouteListing;
@@ -50,11 +71,11 @@ public class Booking {
 
     }
 
-    public String getBookingId() {
+    public Integer getBookingId() {
         return bookingId;
     }
 
-    public void setBookingId(String bookingId) {
+    public void setBookingId(Integer bookingId) {
         this.bookingId = bookingId;
     }
 
@@ -82,11 +103,13 @@ public class Booking {
         this.inboundRouteListing = inboundRouteListing;
     }
 
-    public Date getStartBookingDatetime() {
+    public boolean hasInboundRouteListing() { return this.inboundRouteListing != null; }
+
+    public LocalDateTime getStartBookingDatetime() {
         return startBookingDatetime;
     }
 
-    public void setStartBookingDatetime(Date startBookingDatetime) {
+    public void setStartBookingDatetime(LocalDateTime startBookingDatetime) {
         this.startBookingDatetime = startBookingDatetime;
     }
 

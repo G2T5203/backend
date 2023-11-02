@@ -1,6 +1,5 @@
 package com.G2T5203.wingit.seat;
 
-import com.G2T5203.wingit.entities.Seat;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +12,14 @@ public class SeatController {
 
     public SeatController(SeatService service) { this.service = service; }
 
-    @GetMapping(path = "/seats")
-    public List<SeatSimpleJson> getAllSeats() { return service.getAllSeats(); }
+    @GetMapping(path = "/seats/{planeId}")
+    public List<SeatSimpleJson> getAllSeatsForPlane(@PathVariable String planeId) {
+        try {
+            return service.getAllSeatsForPlaneAsSimpleJson(planeId);
+        } catch (Exception e) {
+            throw new SeatBadRequestException(e);
+        }
+    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/seats/new")

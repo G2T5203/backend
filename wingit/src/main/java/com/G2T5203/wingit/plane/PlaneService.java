@@ -1,12 +1,7 @@
 package com.G2T5203.wingit.plane;
 
-import com.G2T5203.wingit.entities.Plane;
+import com.G2T5203.wingit.seat.SeatService;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,9 +9,11 @@ import java.util.List;
 @Service
 public class PlaneService {
     private final PlaneRepository repo;
+    private final SeatService seatService;
 
-    public PlaneService(PlaneRepository repo) {
+    public PlaneService(PlaneRepository repo, SeatService seatService) {
         this.repo = repo;
+        this.seatService = seatService;
     }
 
     public List<Plane> getAllPlanes() {
@@ -31,6 +28,15 @@ public class PlaneService {
     public Plane createPlane(Plane newPlane) {
         if (repo.existsById(newPlane.getPlaneId())) throw new PlaneBadRequestException("PlaneId already exists.");
         return repo.save(newPlane);
+    }
+
+    @Transactional
+    public Plane createPlaneWithSeats(Plane newPlane) {
+        if (repo.existsById(newPlane.getPlaneId())) throw new PlaneBadRequestException("PlaneId already exists.");
+        Plane savedPlane = repo.save(newPlane);
+
+        seatService.createSeatsForNewPlane(savedPlane);
+        return savedPlane;
     }
 
     @Transactional

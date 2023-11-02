@@ -1,5 +1,7 @@
-package com.G2T5203.wingit.entities;
+package com.G2T5203.wingit.user;
 
+import com.G2T5203.wingit.booking.Booking;
+import com.G2T5203.wingit.user.CustomAuthorityDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
@@ -30,11 +32,13 @@ public class WingitUser implements UserDetails {
     private LocalDate dob;
     @Column(unique = true) @Email @NotEmpty
     private String email;
+    // TODO: Enforce some sort of pattern check for phone numbers.
     @NotEmpty
     private String phone;
-    @NotEmpty @Pattern(regexp = "Mr|Mrs|Miss|Mdm|Master")
+    @NotEmpty @Pattern(regexp = "Mr|Mrs|Miss|Mdm|Master", message = "Salutation can only be Mr, Mrs, Miss, Mdm, or Master")
     private String salutation;
     @OneToMany(mappedBy = "wingitUser", cascade = CascadeType.ALL)
+    //@JsonManagedReference
     @JsonIgnore
     private List<Booking> bookings;
 
