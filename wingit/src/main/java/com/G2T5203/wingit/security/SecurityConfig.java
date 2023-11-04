@@ -35,7 +35,6 @@ public class SecurityConfig {
     @Value("${jwt.key}")
     private String jwtKey;
 
-
     @Bean
     @Order(1)
     SecurityFilterChain h2ConsoleSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -62,6 +61,9 @@ public class SecurityConfig {
                             .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/token")).authenticated()
                             .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/adminToken")).hasRole("ADMIN")
                             .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/checkJwt")).hasRole("ADMIN")
+
+                            .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.PUT, "/adminUtils/forceCancelNonInitBookings")).hasRole("ADMIN")
+                            .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.PUT, "/adminUtils/resetBookingsAndUsers")).hasRole("ADMIN")
 
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/routes/new")).hasRole("ADMIN")
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/seats/*")).hasRole("ADMIN")
@@ -110,9 +112,9 @@ public class SecurityConfig {
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/seatListings/**")).hasRole("ADMIN")
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.PUT, "/seatListings/**")).authenticated()
 
+                            .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/rest/api/generate-calendar/*")).authenticated()
+
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/*")).permitAll()
-
-
 
                             .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/users/authTest/*")).authenticated()
                             .anyRequest().hasAuthority("SCOPE_READ");
@@ -128,8 +130,6 @@ public class SecurityConfig {
                 .httpBasic(withDefaults())
                 .build();
     }
-
-
 
     @Bean
     JwtEncoder jwtEncoder() {
@@ -149,11 +149,6 @@ public class SecurityConfig {
         SecretKeySpec originalKey = new SecretKeySpec(bytes, 0, bytes.length,"RSA");
         return NimbusJwtDecoder.withSecretKey(originalKey).macAlgorithm(MacAlgorithm.HS512).build();
     }
-
-
-
-
-
 
     private UserDetailsService userDetailsService;
 
